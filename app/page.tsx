@@ -33,11 +33,37 @@ export default function Home() {
 
       {/* Main Content Space */}
       <div className="relative">
-        {/* Subtle Header */}
-        <div className="max-w-7xl mx-auto px-6 pt-12 pb-4">
-          <div className="max-w-2xl">
-            <h1 className="text-3xl font-black text-white tracking-tighter uppercase mb-2">Alpha Terminal</h1>
-            <p className="text-xs font-medium text-gray-600 uppercase tracking-[0.2em]">Institutional Token Intelligence • Multi-Chain Aggregator</p>
+        {/* Product Mission Header */}
+        <div className="max-w-7xl mx-auto px-6 pt-16 pb-12">
+          <div className="max-w-3xl">
+            <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase mb-4 leading-none">
+              Institutional <span className="text-emerald-500">Alpha</span> <br/> 
+              at Terminal Speed.
+            </h1>
+            <p className="text-sm md:text-base text-gray-500 font-medium uppercase tracking-[0.1em] mb-12">
+              BirdeyeAI monitors thousands of new tokens across <span className="text-white">Solana, Base, and Ethereum</span> to find early-stage liquidity signals before they hit the mainstream.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 border-t border-[#161616] pt-12">
+              <div>
+                <div className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <div className="w-1 h-1 rounded-full bg-emerald-500" /> 01. Aggregate
+                </div>
+                <p className="text-xs text-gray-400 leading-relaxed">Direct integration with Birdeye V3 Data for sub-second listing updates.</p>
+              </div>
+              <div>
+                <div className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <div className="w-1 h-1 rounded-full bg-emerald-500" /> 02. Score
+                </div>
+                <p className="text-xs text-gray-400 leading-relaxed">Algorithmic ranking based on Volume-to-Liquidity velocity and trade density.</p>
+              </div>
+              <div>
+                <div className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <div className="w-1 h-1 rounded-full bg-emerald-500" /> 03. Verify
+                </div>
+                <p className="text-xs text-gray-400 leading-relaxed">Llama-3 powered technical analysis to filter out noise and wash-trading.</p>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -54,12 +54,14 @@ export default function SuperFeed() {
     <div className="max-w-7xl mx-auto px-6 py-8">
       {/* Sleek Pulse Bar */}
       {pulse && (
-        <div className="mb-8 p-3 rounded-lg bg-[#0c0c0c] border border-[#161616] flex items-center gap-4 animate-in fade-in duration-700">
-          <div className="flex items-center gap-2 px-2 py-1 bg-emerald-500/10 rounded border border-emerald-500/20">
+        <div className="mb-12 p-4 rounded-lg bg-[#0c0c0c] border border-emerald-500/20 flex flex-col md:flex-row items-start md:items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-700">
+          <div className="flex items-center gap-2 px-2 py-1 bg-emerald-500/10 rounded border border-emerald-500/20 shrink-0">
             <Sparkles className="w-3 h-3 text-emerald-500" />
             <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest leading-none">Market Alpha</span>
           </div>
-          <p className="text-[11px] text-gray-400 font-medium truncate">{pulse}</p>
+          <p className="text-xs md:text-sm text-gray-300 font-medium leading-relaxed">
+            {pulse}
+          </p>
         </div>
       )}
 
