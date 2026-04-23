@@ -1,0 +1,78 @@
+import { BIRDEYE_API_KEY, BirdeyeToken, ScoredToken, SUPPORTED_CHAINS } from "./types";
+
+export async function fetchTokensForChain(chain: string): Promise<ScoredToken[]> {
+  const url = `https://public-api.birdeye.so/defi/v3/token/list?sort_by=volume_24h_usd&sort_type=desc&limit=50&min_liquidity=5000`;
+  
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "X-API-KEY": BIRDEYE_API_KEY,
+        "x-chain": chain,
+        "accept": "application/json",
+      },
+    });
+
+    const data = await response.json();
+    if (!data.success) return [];
+
+    const tokens = data.data.items || [];
+    
+    return tokens
+      .filter((t: any) => t.volume_24h_usd > 15000) 
+      .map((t: any) => {
+        const token: BirdeyeToken = {
+          address: t.address,
+          symbol: t.symbol,
+          name: t.name,
+          decimals: t.decimals,
+          price: t.price,
+          liquidity: t.liquidity,
+          v24hVolume: t.volume_24h_usd,
+          v24hChangePercent: t.volume_24h_change_percent || 0,
+          uniqueWallets24h: t.trade_24h_count || 0,
+          lastTradeUnixTime: t.last_trade_unix_time,
+          chain: chain,
+          logoURI: t.logo_uri,
+        };
+        return calculateSignalScore(token);
+      });
+  } catch (error) {
+    return [];
+  }
+}
+
+export function calculateSignalScore(token: BirdeyeToken): ScoredToken {
+  let score = 0;
+
+  // 1. Volume/Liquidity Velocity (Max 40 pts)
+  const volLiqRatio = token.v24hVolume / token.liquidity;
+  if (volLiqRatio > 3) score += 40;
+  else if (volLiqRatio > 1.5) score += 30;
+  else if (volLiqRatio > 0.8) score += 20;
+  else score += 10;
+
+  // 2. Momentum (Max 30 pts)
+  if (token.v24hChangePercent > 50) score += 30;
+  else if (token.v24hChangePercent > 15) score += 20;
+  else if (token.v24hChangePercent > 0) score += 10;
+
+  // 3. Trade Density (Max 30 pts)
+  if (token.uniqueWallets24h > 2000) score += 30;
+  else if (token.uniqueWallets24h > 500) score += 20;
+  else if (token.uniqueWallets24h > 100) score += 10;
+
+  let label: ScoredToken["label"] = "Watchlist";
+  if (score >= 75) label = "Strong Opportunity";
+  else if (score >= 45) label = "Early Momentum";
+
+  return { ...token, signalScore: score, label };
+}
+
+export async function getSuperFeed(): Promise<ScoredToken[]> {
+  const allTokens = await Promise.all(
+    SUPPORTED_CHAINS.map((chain) => fetchTokensForChain(chain))
+  );
+  
+  return allTokens.flat().sort((a, b) => b.signalScore - a.signalScore);
+}
