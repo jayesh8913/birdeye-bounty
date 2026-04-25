@@ -78,7 +78,7 @@ export async function getSuperFeed(): Promise<ScoredToken[]> {
 }
 
 export async function searchTokens(keyword: string): Promise<ScoredToken[]> {
-  const url = `https://public-api.birdeye.so/defi/v3/search?keyword=${encodeURIComponent(keyword)}&target=token&search_mode=partial&sort_by=volume_24h_usd&sort_type=desc&verify_token=false&limit=10`;
+  const url = `https://public-api.birdeye.so/defi/v3/search?keyword=${encodeURIComponent(keyword)}&chain=all&target=token&search_mode=partial&sort_by=volume_24h_usd&sort_type=desc&verify_token=false&limit=20`;
   
   try {
     const response = await fetch(url, {
@@ -96,13 +96,14 @@ export async function searchTokens(keyword: string): Promise<ScoredToken[]> {
     // Filter results that belong to our supported chains and have some liquidity
     return data.data.items
       .filter((item: any) => 
-        SUPPORTED_CHAINS.includes(item.chain) && 
         item.result && 
         item.result.length > 0
       )
       .flatMap((item: any) => {
-        const chain = item.chain;
         return item.result.map((t: any) => {
+          // Birdeye search results use 'network' instead of 'chain' inside the result objects
+          const chain = t.network || item.chain;
+          
           const token: BirdeyeToken = {
             address: t.address,
             symbol: t.symbol,
@@ -120,6 +121,7 @@ export async function searchTokens(keyword: string): Promise<ScoredToken[]> {
           return calculateSignalScore(token);
         });
       })
+      .filter((t: ScoredToken) => SUPPORTED_CHAINS.includes(t.chain))
       .slice(0, 10);
   } catch (error) {
     console.error("Search error:", error);

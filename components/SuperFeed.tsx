@@ -63,7 +63,7 @@ export default function SuperFeed() {
         setSuggestions([]);
         setShowSuggestions(false);
       }
-    }, 300);
+    }, 600);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
