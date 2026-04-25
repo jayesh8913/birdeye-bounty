@@ -11,16 +11,16 @@ export async function fetchTokensForChain(chain: string): Promise<ScoredToken[]>
         "x-chain": chain,
         "accept": "application/json",
       },
+      cache: "no-store"
     });
 
     const data = await response.json();
     if (!data.success) return [];
 
     const tokens = data.data.items || [];
+    const filtered = tokens.filter((t: any) => t.volume_24h_usd > 1000);
     
-    return tokens
-      .filter((t: any) => t.volume_24h_usd > 15000) 
-      .map((t: any) => {
+    return filtered.map((t: any) => {
         const token: BirdeyeToken = {
           address: t.address,
           symbol: t.symbol,

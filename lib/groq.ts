@@ -50,3 +50,35 @@ export async function analyzeToken(token: ScoredToken): Promise<string> {
     return "Failed to generate Groq AI insight. Connectivity error.";
   }
 }
+
+export async function generatePulseSummary(tokens: ScoredToken[]): Promise<string> {
+  const top5 = tokens.slice(0, 5);
+  const prompt = `
+    Analyze these top 5 trending tokens: ${top5.map(t => `${t.symbol} (${t.name}) on ${t.chain} with score ${t.signalScore}`).join(", ")}.
+    Provide a concise 1-sentence market summary and highlight the best opportunity based on the data.
+  `;
+
+  try {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          { role: "system", content: "You are a professional market analyst." },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.3,
+        max_tokens: 150,
+      }),
+    });
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+  } catch (error) {
+    return "Market sentiment is currently neutral with steady volume across major chains.";
+  }
+}

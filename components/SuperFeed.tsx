@@ -32,17 +32,32 @@ export default function SuperFeed() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [tokensRes, pulseRes] = await Promise.all([
-        fetch("/api/tokens"),
-        fetch("/api/pulse")
-      ]);
+      console.log("Fetching tokens...");
+      const tokensRes = await fetch(`/api/tokens?t=${Date.now()}`);
+      if (!tokensRes.ok) throw new Error(`Tokens API failed: ${tokensRes.status}`);
       const tokensData = await tokensRes.json();
-      const pulseData = await pulseRes.json();
-      if (Array.isArray(tokensData)) setTokens(tokensData);
-      setPulse(pulseData.summary);
+      
+      if (Array.isArray(tokensData)) {
+        setTokens(tokensData);
+      } else {
+        console.error("Tokens data is not an array:", tokensData);
+      }
+
+      // Fetch pulse separately so it doesn't block tokens
+      try {
+        const pulseRes = await fetch(`/api/pulse?t=${Date.now()}`);
+        if (pulseRes.ok) {
+          const pulseData = await pulseRes.json();
+          setPulse(pulseData.summary || "No market summary available.");
+        }
+      } catch (pulseError) {
+        console.error("Pulse fetch failed:", pulseError);
+        setPulse("Market summary currently unavailable.");
+      }
+      
       setLastUpdated(new Date().toLocaleTimeString());
     } catch (error) {
-      console.error(error);
+      console.error("Fetch error:", error);
     } finally {
       setLoading(false);
     }
