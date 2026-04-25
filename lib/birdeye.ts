@@ -1,7 +1,7 @@
 import { BIRDEYE_API_KEY, BirdeyeToken, ScoredToken, SUPPORTED_CHAINS } from "./types";
 
 export async function fetchTokensForChain(chain: string): Promise<ScoredToken[]> {
-  const url = `https://public-api.birdeye.so/defi/v3/token/list?sort_by=volume_24h_usd&sort_type=desc&limit=50&min_liquidity=5000`;
+  const url = `https://public-api.birdeye.so/defi/v3/token/list?sort_by=volume_24h_usd&sort_type=desc&limit=100&min_liquidity=5000`;
   
   try {
     const response = await fetch(url, {
@@ -15,12 +15,17 @@ export async function fetchTokensForChain(chain: string): Promise<ScoredToken[]>
     });
 
     const data = await response.json();
-    if (!data.success) return [];
+    if (!data.success) {
+      console.error(`Birdeye API failed for ${chain}:`, data.message);
+      return [];
+    }
 
     const tokens = data.data.items || [];
-    const filtered = tokens.filter((t: any) => t.volume_24h_usd > 1000);
+    console.log(`[Birdeye] Fetched ${tokens.length} tokens for ${chain}`);
     
-    return filtered.map((t: any) => {
+    const mapped = tokens
+      .filter((t: any) => (t.volume_24h_usd || t.v24hVolume) > 1000) 
+      .map((t: any) => {
         const token: BirdeyeToken = {
           address: t.address,
           symbol: t.symbol,
@@ -28,16 +33,20 @@ export async function fetchTokensForChain(chain: string): Promise<ScoredToken[]>
           decimals: t.decimals,
           price: t.price,
           liquidity: t.liquidity,
-          v24hVolume: t.volume_24h_usd,
-          v24hChangePercent: t.volume_24h_change_percent || 0,
-          uniqueWallets24h: t.trade_24h_count || 0,
+          v24hVolume: t.volume_24h_usd || t.v24hVolume || 0,
+          v24hChangePercent: t.volume_24h_change_percent || t.price_change_24h_percent || 0,
+          uniqueWallets24h: t.trade_24h_count || t.unique_wallet_24h || 0,
           lastTradeUnixTime: t.last_trade_unix_time,
           chain: chain,
           logoURI: t.logo_uri,
         };
         return calculateSignalScore(token);
       });
+    
+    console.log(`[Birdeye] Mapped ${mapped.length} valid tokens for ${chain}`);
+    return mapped;
   } catch (error) {
+    console.error(`Fetch error for ${chain}:`, error);
     return [];
   }
 }
