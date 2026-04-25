@@ -76,3 +76,53 @@ export async function getSuperFeed(): Promise<ScoredToken[]> {
   
   return allTokens.flat().sort((a, b) => b.signalScore - a.signalScore);
 }
+
+export async function searchTokens(keyword: string): Promise<ScoredToken[]> {
+  const url = `https://public-api.birdeye.so/defi/v3/search?keyword=${encodeURIComponent(keyword)}&target=token&search_mode=partial&sort_by=volume_24h_usd&sort_type=desc&verify_token=false&limit=10`;
+  
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "X-API-KEY": BIRDEYE_API_KEY,
+        "accept": "application/json",
+      },
+      cache: "no-store"
+    });
+
+    const data = await response.json();
+    if (!data.success || !data.data || !data.data.items) return [];
+
+    // Filter results that belong to our supported chains and have some liquidity
+    return data.data.items
+      .filter((item: any) => 
+        SUPPORTED_CHAINS.includes(item.chain) && 
+        item.result && 
+        item.result.length > 0
+      )
+      .flatMap((item: any) => {
+        const chain = item.chain;
+        return item.result.map((t: any) => {
+          const token: BirdeyeToken = {
+            address: t.address,
+            symbol: t.symbol,
+            name: t.name,
+            decimals: t.decimals || 0,
+            price: t.price || 0,
+            liquidity: t.liquidity || 0,
+            v24hVolume: t.volume_24h_usd || 0,
+            v24hChangePercent: t.price_change_24h_percent || 0,
+            uniqueWallets24h: t.unique_wallet_24h || 0,
+            lastTradeUnixTime: t.last_trade_unix_time || 0,
+            chain: chain,
+            logoURI: t.logo_uri,
+          };
+          return calculateSignalScore(token);
+        });
+      })
+      .slice(0, 10);
+  } catch (error) {
+    console.error("Search error:", error);
+    return [];
+  }
+}
