@@ -23,7 +23,7 @@ export default function SuperFeed() {
   useEffect(() => {
     setIsMounted(true);
     fetchData();
-    const interval = setInterval(fetchData, 60000); 
+    const interval = setInterval(fetchData, 1800000); 
     return () => clearInterval(interval);
   }, []);
 
@@ -82,7 +82,7 @@ export default function SuperFeed() {
     setLoading(true);
     try {
       console.log("Fetching tokens...");
-      const tokensRes = await fetch(`/api/tokens?t=${Date.now()}`);
+      const tokensRes = await fetch(`/api/tokens`);
       if (!tokensRes.ok) throw new Error(`Tokens API failed: ${tokensRes.status}`);
       const tokensData = await tokensRes.json();
       
@@ -94,7 +94,7 @@ export default function SuperFeed() {
 
       // Fetch pulse separately so it doesn't block tokens
       try {
-        const pulseRes = await fetch(`/api/pulse?t=${Date.now()}`);
+        const pulseRes = await fetch(`/api/pulse`);
         if (pulseRes.ok) {
           const pulseData = await pulseRes.json();
           setPulse(pulseData.summary || "No market summary available.");
