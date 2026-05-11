@@ -6,7 +6,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const tokens = await getCachedData("superfeed", () => getSuperFeed());
+    // Cache for 120 seconds (2 minutes)
+    const tokens = await getCachedData("superfeed", () => getSuperFeed(), 120);
     return NextResponse.json(tokens);
   } catch (error) {
     console.error("Tokens API Error:", error);

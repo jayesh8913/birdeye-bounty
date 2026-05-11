@@ -10,7 +10,8 @@ export async function POST(req: NextRequest) {
     }
     
     const cacheKey = `analyze-${token.chain}-${token.address}`;
-    const insight = await getCachedData(cacheKey, () => analyzeToken(token));
+    // Cache AI analysis for 3600 seconds (1 hour)
+    const insight = await getCachedData(cacheKey, () => analyzeToken(token), 3600);
     
     return NextResponse.json({ insight });
   } catch (error) {
