@@ -79,9 +79,15 @@ export default function Home() {
           </div>
           <p className="text-[10px] uppercase tracking-widest font-medium">Birdeye AI Intelligence &copy; 2026</p>
           <div className="flex gap-4 text-[10px] uppercase font-bold tracking-tighter">
-            <span className="text-gray-800">Privacy</span>
-            <span className="text-gray-800">Terms</span>
-            <span className="text-gray-800">API Documentation</span>
+            <a 
+              href="https://twitter.com/jayeshpatil1770" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#161616] bg-black text-emerald-500 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all lowercase"
+            >
+              <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+              @jayeshpatil1770
+            </a>
           </div>
         </div>
       </footer>
