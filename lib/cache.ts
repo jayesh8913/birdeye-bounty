@@ -4,6 +4,7 @@ type CacheEntry<T> = {
 };
 
 const cache = new Map<string, CacheEntry<any>>();
+const inFlight = new Map<string, Promise<any>>();
 const THIRTY_MINUTES = 30 * 60 * 1000;
 
 export async function getCachedData<T>(
@@ -19,8 +20,23 @@ export async function getCachedData<T>(
     return cached.data;
   }
 
+  // Check if there's already a request in flight for this key
+  if (inFlight.has(key)) {
+    console.log(`[Cache] In-flight: ${key}. Waiting for existing request...`);
+    return inFlight.get(key);
+  }
+
   console.log(`[Cache] Miss: ${key}. Fetching new data...`);
-  const data = await fetcher();
-  cache.set(key, { data, timestamp: now });
-  return data;
+  
+  const promise = fetcher().then(data => {
+    cache.set(key, { data, timestamp: Date.now() });
+    inFlight.delete(key);
+    return data;
+  }).catch(error => {
+    inFlight.delete(key);
+    throw error;
+  });
+
+  inFlight.set(key, promise);
+  return promise;
 }

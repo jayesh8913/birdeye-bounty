@@ -16,12 +16,11 @@ export async function fetchTokensForChain(chain: string): Promise<ScoredToken[]>
 
     const data = await response.json();
     if (!data.success) {
-      console.error(`Birdeye API failed for ${chain}:`, data.message);
+      console.error(`[Birdeye] API error for ${chain}:`, data.message || "Unknown error");
       return [];
     }
 
-    const tokens = data.data.items || [];
-    console.log(`[Birdeye] Fetched ${tokens.length} tokens for ${chain}`);
+    const tokens = data.data?.items || [];
     
     const mapped = tokens
       .filter((t: any) => (t.volume_24h_usd || t.v24hVolume) > 1000) 
@@ -43,7 +42,7 @@ export async function fetchTokensForChain(chain: string): Promise<ScoredToken[]>
         return calculateSignalScore(token);
       });
     
-    console.log(`[Birdeye] Mapped ${mapped.length} valid tokens for ${chain}`);
+    console.log(`[Birdeye] ${chain}: ${mapped.length} tokens mapped from ${tokens.length} fetched`);
     return mapped;
   } catch (error) {
     console.error(`Fetch error for ${chain}:`, error);
@@ -79,11 +78,21 @@ export function calculateSignalScore(token: BirdeyeToken): ScoredToken {
 }
 
 export async function getSuperFeed(): Promise<ScoredToken[]> {
-  const allTokens = await Promise.all(
-    SUPPORTED_CHAINS.map((chain) => fetchTokensForChain(chain))
-  );
+  const allTokens: ScoredToken[][] = [];
   
-  return allTokens.flat().sort((a, b) => b.signalScore - a.signalScore);
+  for (const chain of SUPPORTED_CHAINS) {
+    const tokens = await fetchTokensForChain(chain);
+    allTokens.push(tokens);
+    
+    // Add a small delay between chain fetches to avoid rate limiting
+    if (SUPPORTED_CHAINS.indexOf(chain) !== SUPPORTED_CHAINS.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+  
+  const flatTokens = allTokens.flat().sort((a, b) => b.signalScore - a.signalScore);
+  console.log(`[SuperFeed] Compiled ${flatTokens.length} tokens across all chains`);
+  return flatTokens;
 }
 
 export async function searchTokens(keyword: string): Promise<ScoredToken[]> {
